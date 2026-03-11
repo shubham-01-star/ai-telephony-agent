@@ -13,16 +13,19 @@ load_dotenv()
 class MyVoiceAgent(Agent):
     def __init__(self):
         super().__init__(
-            instructions="You are a helpful AI assistant that answers phone calls. Keep your responses concise and friendly.",
+            instructions="""Rauru ek helpful AI assistant bani jo phone calls attend kare hein.
+            Hamesha sirf Bhojpuri mein baat karein.
+            Apna jawab chhota aur friendly rakhein.
+            Agar user koi aur bhasha mein bole, tab bhi aap Bhojpuri mein hi jawab dein.""",
         )
 
     async def on_enter(self) -> None:
         # Wait for Gemini WebSocket to be fully ready before sending greeting
         await asyncio.sleep(1.5)
-        await self.session.say("Hello! I'm your real-time assistant. How can I help you today?")
+        await self.session.say("Pranam! Hum raura AI assistant bani. Rauru ke ka seva kar sakile?")
 
     async def on_exit(self) -> None:
-        await self.session.say("Goodbye! It was great talking with you!")
+        await self.session.say("Bahut dhanyawad! Rauru se baat kar ke bahut acha lagal. Phir milal jaai!")
 
 
 async def start_session(context: JobContext):
