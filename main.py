@@ -1,7 +1,7 @@
 import asyncio
 import traceback
 import logging
-from videosdk.agents import Agent, AgentSession, RealTimePipeline, JobContext, RoomOptions, WorkerJob, Options
+from videosdk.agents import Agent, AgentSession, Pipeline, JobContext, RoomOptions, WorkerJob, Options
 from videosdk.plugins.google import GeminiRealtime, GeminiLiveConfig
 from dotenv import load_dotenv
 import os
@@ -9,26 +9,21 @@ import os
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-
+# Define the agent's behavior and personality
 class MyVoiceAgent(Agent):
     def __init__(self):
         super().__init__(
-            instructions="""Rauru ek helpful AI assistant bani jo phone calls attend kare hein.
-            Hamesha sirf Bhojpuri mein baat karein.
-            Apna jawab chhota aur friendly rakhein.
-            Agar user koi aur bhasha mein bole, tab bhi aap Bhojpuri mein hi jawab dein.""",
+            instructions="You are a helpful AI assistant that answers phone calls. Keep your responses concise and friendly.",
         )
 
     async def on_enter(self) -> None:
-        # Wait for Gemini WebSocket to be fully ready before sending greeting
-        await asyncio.sleep(1.5)
-        await self.session.say("Pranam! Hum raura AI assistant bani. Rauru ke ka seva kar sakile?")
+        await self.session.say("Hello! I'm your real-time assistant. How can I help you today?")
 
     async def on_exit(self) -> None:
-        await self.session.say("Bahut dhanyawad! Rauru se baat kar ke bahut acha lagal. Phir milal jaai!")
-
+        await self.session.say("Goodbye! It was great talking with you!")
 
 async def start_session(context: JobContext):
+    # Configure the Gemini model for real-time voice
     model = GeminiRealtime(
         model="gemini-2.5-flash-native-audio-preview-12-2025",
         api_key=os.getenv("GOOGLE_API_KEY"),
@@ -37,45 +32,28 @@ async def start_session(context: JobContext):
             response_modalities=["AUDIO"]
         )
     )
-    pipeline = RealTimePipeline(model=model)
+    pipeline = Pipeline(llm=model)
     session = AgentSession(agent=MyVoiceAgent(), pipeline=pipeline)
-
-    # Fix: bypass the SIP audio-stream delay so on_enter fires immediately.
-    # Without this, the SDK waits for AUDIO_STREAM_ENABLED before greeting the
-    # caller — but Twilio drops the call due to silence before that event fires.
-    session._should_delay_for_sip_user = lambda: False
 
     try:
         await context.connect()
         await session.start()
         await asyncio.Event().wait()
-    except Exception as e:
-        logging.error(f"Session error: {e}")
-        traceback.print_exc()
     finally:
         await session.close()
         await context.shutdown()
 
-
-def on_room_error(error):
-    logging.error(f"Room error: {error}")
-
-
 def make_context() -> JobContext:
-    room_options = RoomOptions(
-        auto_end_session=False,
-        session_timeout_seconds=300,
-        on_room_error=on_room_error
-    )
+    room_options = RoomOptions()
     return JobContext(room_options=room_options)
-
 
 if __name__ == "__main__":
     try:
+        # Register the agent with a unique ID
         options = Options(
-            agent_id="MyTelephonyAgent",
-            register=True,
-            max_processes=10,
+            agent_id="MyTelephonyAgent",  # CRITICAL: Unique identifier for routing
+            register=True,  # REQUIRED: Register with VideoSDK for telephony
+            max_processes=10,  # Concurrent calls to handle
             host="localhost",
             port=8081,
         )

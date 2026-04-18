@@ -17,7 +17,7 @@ def generate_token(role="rtc"):
         "apikey": api_key,
         "permissions": ["allow_join", "allow_mod"],
         "version": 2,
-        "roles": ["crawler"],   # only use crawler role to prevent V2 API 401 errors
+        "roles": ["rtc", "crawler"],   # both roles — rtc for meeting join, crawler for analytics API
         "iat": int(time.time()),
         "exp": int(time.time()) + 86400,  # 24 hours
     }
