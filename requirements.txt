@@ -1,3 +1,4 @@
-videosdk-agents
+videosdk-agents==0.0.73
 videosdk-plugins-google
 python-dotenv
+PyJWT
