@@ -12,6 +12,7 @@ An AI-powered telephony agent built with [VideoSDK](https://videosdk.live/) and 
 ## Requirements
 
 - Python **3.11+** (Python 3.12 recommended)
+- `videosdk-agents >= 1.0.8` (Required for `.Pipeline()` class and optimized native audio)
 - [VideoSDK account](https://app.videosdk.live/) with API Key + Secret
 - [Google AI Studio](https://aistudio.google.com/apikey) API Key
 - [Twilio account](https://twilio.com/) with a phone number (for SIP calling)
@@ -53,6 +54,8 @@ python generate_token.py crawler
 ```
 
 Copy the generated token into `.env` as `VIDEOSDK_AUTH_TOKEN`.
+
+> ⚠️ Ensure your token has BOTH `rtc` and `crawler` roles. A purely `rtc` token will fail VideoSDK analytics telemetry under the hood and result in massive `401 Unauthorized` log spam, severely increasing your latency.
 
 > ⚠️ Token expires every **24 hours** — regenerate as needed.
 
