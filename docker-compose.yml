@@ -1,0 +1,11 @@
+services:
+  telephony-agent:
+    build: .
+    container_name: ai-telephony-agent
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    restart: always
+    volumes:
+      - ./.env:/app/.env
